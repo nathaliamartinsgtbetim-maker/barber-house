@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barber House — Sistema do Salão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+--ink:#2B1620;
+--wine:#8C2F39;
+--wine-dark:#6E2530;
+--brass:#C9A227;
+--brass-soft:#E4C765;
+--sage:#5C7A5E;
+--bg:#EDE6DC;
+--surface:#FBF8F3;
+--surface-2:#F3ECE1;
+--line: rgba(43,22,32,0.12);
+--muted: rgba(43,22,32,0.58);
+}
+*{box-sizing:border-box;}
+html{-webkit-font-smoothing:antialiased;}
+body{
+margin:0;
+background:var(--bg);
+color:var(--ink);
+font-family:'Work Sans', sans-serif;
+min-height:100vh;
+}
+::selection{background:var(--brass-soft);}
+
+a{color:inherit;}
+
+/* ---------- TOPO ---------- */
+header.top{
+display:flex; align-items:center; justify-content:space-between;
+padding:22px clamp(20px,4vw,56px);
+border-bottom:1px solid var(--line);
+background:var(--surface);
+position:sticky; top:0; z-index:50;
+}
+.brand{
+display:flex; align-items:center; gap:12px;
+}
+.brand-mark{
+width:34px;height:34px;border-radius:50%;
+background: conic-gradient(from 220deg, var(--wine), var(--brass), var(--wine));
+display:flex;align-items:center;justify-content:center;
+box-shadow: inset 0 0 0 3px var(--surface);
+}
+.brand-mark::after{
+content:"";
+width:12px;height:12px;border-radius:50%;
+background:var(--surface);
+}
+.brand-name{
+font-family:'Fraunces', serif; font-weight:600; font-size:20px; letter-spacing:0.2px;
+}
+.brand-sub{
+font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--muted);
+margin-top:1px;
+}
+nav.switch{
+display:flex; gap:6px; background:var(--surface-2); padding:5px; border-radius:999px;
+border:1px solid var(--line);
+}
+nav.switch button{
+border:none; background:transparent; padding:9px 18px; border-radius:999px;
+font-family:'Work Sans', sans-serif; font-weight:600; font-size:13.5px;
+color:var(--muted); cursor:pointer; transition: all .25s ease;
+}
+nav.switch button.active{
+background:var(--ink); color:var(--surface);
+}
+
+main{padding:clamp(24px,4vw,56px); max-width:1240px; margin:0 auto;}
+.view{display:none; animation: fadeIn .35s ease;}
+.view.active{display:block;}
+@keyframes fadeIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+/* ================= PAINEL (ADMIN) ================= */
+.panel-head{
+display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap;
+margin-bottom:28px;
+}
+.eyebrow{
+font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:2px;
+text-transform:uppercase; color:var(--wine); margin-bottom:8px; display:block;
+}
+h1{
+font-family:'Fraunces', serif; font-weight:500; font-size:clamp(28px,3.4vw,42px);
+margin:0; line-height:1.05;
+}
+.today-note{color:var(--muted); font-size:14px; margin-top:8px;}
+
+.kpis{display:flex; gap:14px; flex-wrap:wrap;}
+.kpi{
+background:var(--surface); border:1px solid var(--line); border-radius:14px;
+padding:14px 18px; min-width:120px;
+}
+.kpi .num{font-family:'Fraunces', serif; font-size:26px; font-weight:600;}
+.kpi .lbl{font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:2px;}
+
+/* Espelhos row: signature visualization — each professional is a "mirror" column with a day timeline */
+.mirrors{
+display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr));
+gap:18px; margin-top:26px;
+}
+.mirror{
+background:var(--surface); border-radius:22px; border:1px solid var(--line);
+overflow:hidden; position:relative;
+}
+.mirror-frame{
+padding:18px 20px 14px; display:flex; align-items:center; gap:12px;
+border-bottom:1px dashed var(--line);
+background: linear-gradient(180deg, var(--surface-2), var(--surface));
+}
+.avatar{
+width:42px;height:42px;border-radius:50%;
+background:linear-gradient(135deg,var(--wine),var(--wine-dark));
+color:var(--surface); display:flex;align-items:center;justify-content:center;
+font-family:'Fraunces',serif; font-weight:600; font-size:16px; flex-shrink:0;
+}
+.prof-name{font-weight:600; font-size:15px;}
+.prof-role{font-size:12px; color:var(--muted);}
+.timeline{padding:16px 18px 20px; display:flex; flex-direction:column; gap:8px;}
+.slot{
+display:flex; align-items:center; gap:10px;
+padding:9px 12px; border-radius:10px; font-size:13px;
+border-left:3px solid var(--line);
+}
+.slot .time{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted); width:44px; flex-shrink:0;}
+.slot.confirmado{background:rgba(92,122,94,0.1); border-left-color:var(--sage);}
+.slot.agendado{background:rgba(201,162,39,0.12); border-left-color:var(--brass);}
+.slot.concluido{background:rgba(43,22,32,0.05); border-left-color:var(--muted); opacity:.7;}
+.slot .info b{display:block; font-size:13px;}
+.slot .info span{font-size:11.5px; color:var(--muted);}
+.slot.empty{
+border-left-color:transparent; color:var(--muted); font-style:italic; font-size:12.5px;
+justify-content:center; padding:14px;
+border:1px dashed var(--line); background:transparent;
+}
+
+.legend{display:flex; gap:18px; margin-top:24px; flex-wrap:wrap; font-size:12.5px; color:var(--muted);}
+.legend span{display:inline-flex; align-items:center; gap:7px;}
+.dot{width:9px;height:9px;border-radius:50%;}
+.dot.sage{background:var(--sage);} .dot.brass{background:var(--brass);} .dot.muted{background:var(--muted);}
+
+/* Tables: services & staff mgmt */
+.section-title{
+font-family:'Fraunces', serif; font-size:22px; font-weight:500; margin:44px 0 16px;
+display:flex; align-items:center; justify-content:space-between;
+}
+.btn{
+border:none; border-radius:10px; padding:10px 18px; font-weight:600; font-size:13px;
+cursor:pointer; font-family:'Work Sans',sans-serif;
+}
+.btn-wine{background:var(--wine); color:#fff;}
+.btn-ghost{background:transparent; border:1px solid var(--line); color:var(--ink);}
+.btn-excluir{
+background:transparent; border:1px solid var(--wine); color:var(--wine);
+border-radius:8px; padding:6px 12px; font-weight:600; font-size:12px;
+cursor:pointer; font-family:'Work Sans',sans-serif; transition: all .15s ease;
+}
+.btn-excluir:hover{background:var(--wine); color:#fff;}
+
+table{width:100%; border-collapse:collapse; background:var(--surface); border-radius:14px; overflow:hidden; border:1px solid var(--line);}
+th,td{text-align:left; padding:13px 16px; font-size:13.5px; border-bottom:1px solid var(--line);}
+th{font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); font-weight:600; background:var(--surface-2);}
+tr:last-child td{border-bottom:none;}
+.price{font-family:'IBM Plex Mono', monospace;}
+.tag{
+font-size:11px; padding:4px 10px; border-radius:999px; font-weight:600;
+display:inline-block;
+}
+.tag.on{background:rgba(92,122,94,0.15); color:var(--sage);}
+.tag.confirmado{background:rgba(92,122,94,0.15); color:var(--sage);}
+.tag.agendado{background:rgba(201,162,39,0.18); color:#8a6d0f;}
+.tag.concluido{background:rgba(43,22,32,0.08); color:var(--muted);}
+.tag.cancelado{background:rgba(140,47,57,0.12); color:var(--wine);}
+
+/* ================= AGENDAMENTO (CLIENTE) ================= */
+.booking-hero{
+text-align:center; max-width:640px; margin:0 auto 40px;
+}
+.booking-hero h1{margin-bottom:10px;}
+.booking-hero p{color:var(--muted); font-size:15px; line-height:1.55;}
+
+.steps{
+display:flex; justify-content:center; gap:8px; margin-bottom:36px; flex-wrap:wrap;
+}
+.step-pill{
+font-family:'IBM Plex Mono', monospace; font-size:11.5px; padding:7px 14px;
+border-radius:999px; border:1px solid var(--line); color:var(--muted);
+}
+.step-pill.done{background:var(--ink); color:var(--surface); border-color:var(--ink);}
+
+.card-grid{
+display:grid; grid-template-columns:repeat(auto-fit, minmax(210px,1fr));
+gap:16px; margin-bottom:44px;
+}
+.pick-card{
+background:var(--surface); border:1px solid var(--line); border-radius:18px;
+padding:20px; cursor:pointer; transition: all .2s ease; position:relative;
+}
+.pick-card:hover{transform:translateY(-3px); box-shadow:0 12px 24px rgba(43,22,32,0.08);}
+.pick-card.selected{border-color:var(--wine); box-shadow:0 0 0 2px var(--wine) inset;}
+.pick-card .icon{
+width:38px;height:38px;border-radius:10px; margin-bottom:14px;
+background:var(--surface-2); display:flex;align-items:center;justify-content:center;
+font-size:18px;
+}
+.pick-card h3{font-family:'Fraunces', serif; font-weight:600; font-size:17px; margin:0 0 6px;}
+.pick-card .meta{font-size:12.5px; color:var(--muted);}
+.pick-card .value{
+margin-top:12px; font-family:'IBM Plex Mono', monospace; font-size:15px; color:var(--wine); font-weight:500;
+}
+
+.prof-card{
+background:var(--surface); border:1px solid var(--line); border-radius:18px;
+padding:22px; text-align:center; cursor:pointer; transition: all .2s ease;
+}
+.prof-card:hover{transform:translateY(-3px); box-shadow:0 12px 24px rgba(43,22,32,0.08);}
+.prof-card.selected{border-color:var(--wine); box-shadow:0 0 0 2px var(--wine) inset;}
+.prof-card .avatar{width:56px;height:56px; font-size:20px; margin:0 auto 12px;}
+.prof-card h3{font-family:'Fraunces', serif; font-size:16px; font-weight:600; margin:0 0 4px;}
+.prof-card .meta{font-size:12px; color:var(--muted);}
+
+.time-grid{
+display:flex; flex-wrap:wrap; gap:10px; margin-bottom:40px;
+}
+.time-slot{
+padding:11px 16px; border-radius:10px; border:1px solid var(--line);
+background:var(--surface); font-family:'IBM Plex Mono', monospace; font-size:13px;
+cursor:pointer; transition: all .2s ease;
+}
+.time-slot:hover{border-color:var(--brass);}
+.time-slot.selected{background:var(--wine); color:#fff; border-color:var(--wine);}
+.time-slot.taken{opacity:.35; text-decoration:line-through; cursor:not-allowed;}
+
+.summary{
+max-width:460px; margin:0 auto; background:var(--surface); border:1px solid var(--line);
+border-radius:20px; padding:26px 28px;
+}
+.summary h3{font-family:'Fraunces', serif; margin:0 0 16px; font-size:19px;}
+.summary-row{
+display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--line);
+font-size:13.5px;
+}
+.summary-row:last-of-type{border-bottom:none;}
+.summary-row .v{font-weight:600;}
+.summary-total{
+display:flex; justify-content:space-between; margin-top:12px; padding-top:14px;
+border-top:1px solid var(--line); font-family:'Fraunces', serif; font-size:19px; font-weight:600;
+}
+.summary-total .v{color:var(--wine);}
+.confirm-btn{
+width:100%; margin-top:20px; padding:14px; border-radius:12px; border:none;
+background:var(--wine); color:#fff; font-weight:700; font-size:14.5px; cursor:pointer;
+font-family:'Work Sans',sans-serif; transition: background .2s ease;
+}
+.confirm-btn:hover{background:var(--wine-dark);}
+.confirm-btn:disabled{background:var(--muted); cursor:not-allowed;}
+
+footer{text-align:center; padding:30px; color:var(--muted); font-size:12px;}
+
+@media (max-width:640px){
+header.top{flex-direction:column; align-items:flex-start; gap:14px;}
+nav.switch{width:100%;}
+nav.switch button{flex:1;}
+}
+</style>
+<style>
+/* estados extra usados pela versão conectada à API */
+.loading-msg, .empty-msg{
+color:var(--muted); font-size:13.5px; font-style:italic; padding:16px 0;
+}
+.api-banner{
+display:none; background:rgba(140,47,57,0.1); border:1px solid rgba(140,47,57,0.3);
+color:var(--wine-dark); padding:12px 16px; border-radius:12px; font-size:13px;
+margin-bottom:22px;
+}
+.api-banner.show{display:block;}
+.field{
+display:flex; flex-direction:column; gap:5px; margin-bottom:14px; text-align:left;
+}
+.field label{font-size:12px; color:var(--muted); font-weight:600;}
+.field input{
+padding:10px 12px; border-radius:9px; border:1px solid var(--line);
+font-family:'Work Sans', sans-serif; font-size:13.5px; background:var(--surface-2);
+}
+.field input:focus{outline:2px solid var(--brass); outline-offset:1px;}
+.date-picker{margin-bottom:22px;}
+.date-picker input{
+padding:10px 14px; border-radius:10px; border:1px solid var(--line);
+font-family:'IBM Plex Mono', monospace; font-size:13.5px; background:var(--surface);
+}
+.feedback{font-size:13px; margin-top:12px; text-align:center;}
+.feedback.ok{color:var(--sage);}
+.feedback.erro{color:var(--wine);}
+
+/* ---------- LOGIN DO DONO ---------- */
+.login-wrap{
+max-width:380px; margin:60px auto; background:var(--surface); border:1px solid var(--line);
+border-radius:22px; padding:36px 32px; text-align:center;
+}
+.login-wrap .brand-mark{width:44px;height:44px; margin:0 auto 18px;}
+.login-wrap h2{font-family:'Fraunces', serif; font-size:22px; margin:0 0 6px; font-weight:600;}
+.login-wrap p{color:var(--muted); font-size:13px; margin:0 0 24px;}
+.login-wrap .field{text-align:left;}
+.login-wrap .confirm-btn{margin-top:6px;}
+.logout-btn{
+background:transparent; border:1px solid var(--line); border-radius:999px;
+padding:8px 16px; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer;
+}
+
+/* ---------- CARDS DE ATENDIMENTOS POR PROFISSIONAL ---------- */
+.staff-cards{
+display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
+gap:16px; margin:20px 0 8px;
+}
+.staff-card{
+background:var(--surface); border:1px solid var(--line); border-radius:18px;
+padding:22px; display:flex; align-items:center; gap:14px;
+}
+.staff-card .avatar{width:48px;height:48px; font-size:18px; flex-shrink:0;}
+.staff-card .staff-info{flex:1; min-width:0;}
+.staff-card h4{font-family:'Fraunces', serif; font-size:16px; font-weight:600; margin:0 0 2px;}
+.staff-card .role{font-size:12px; color:var(--muted);}
+.staff-card .count{
+font-family:'IBM Plex Mono', monospace; font-size:24px; font-weight:500; color:var(--wine);
+line-height:1; text-align:right;
+}
+.staff-card .count-lbl{font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; text-align:right; margin-top:3px;}
+
+/* ---------- MODAIS (novo serviço / novo profissional) ---------- */
+.modal-backdrop{
+display:none; position:fixed; inset:0; background:rgba(43,22,32,0.45);
+align-items:center; justify-content:center; z-index:200; padding:20px;
+}
+.modal-backdrop.show{display:flex;}
+.modal-card{
+background:var(--surface); border-radius:22px; padding:32px 30px; max-width:420px; width:100%;
+max-height:88vh; overflow-y:auto; position:relative; text-align:left;
+box-shadow:0 24px 60px rgba(43,22,32,0.25);
+}
+.modal-card h2{font-family:'Fraunces', serif; font-size:21px; font-weight:600; margin:0 0 4px;}
+.modal-sub{color:var(--muted); font-size:13px; margin:0 0 20px;}
+.modal-close{
+position:absolute; top:14px; right:16px; border:none; background:transparent;
+font-size:22px; line-height:1; color:var(--muted); cursor:pointer;
+}
+.checkbox-list{
+display:flex; flex-direction:column; gap:8px; max-height:180px; overflow-y:auto;
+border:1px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--surface-2);
+}
+.checkbox-list label{
+display:flex; align-items:center; gap:9px; font-size:13.5px; cursor:pointer;
+}
+.checkbox-list input{width:15px; height:15px; accent-color:var(--wine); flex-shrink:0;}
+
+/* ---------- PAGAMENTO (cliente) ---------- */
+.payment-note{
+background:var(--surface-2); border:1px solid var(--line); border-radius:14px;
+padding:16px 18px; margin-bottom:20px; font-size:13px; color:var(--ink);
+}
+.payment-note .payment-title{
+font-weight:700; font-size:13px; margin-bottom:8px; display:flex; align-items:center; gap:7px;
+}
+.payment-options{display:flex; flex-direction:column; gap:6px;}
+.payment-options label{
+display:flex; align-items:center; gap:9px; cursor:pointer; padding:6px 8px; border-radius:8px;
+transition: background .15s ease;
+}
+.payment-options label:hover{background:rgba(43,22,32,0.04);}
+.payment-options input{width:15px; height:15px; accent-color:var(--wine);}
+.payment-options .obs{font-size:11.5px; color:var(--muted); margin-left:24px;}
+.pix-box{
+display:none; margin-top:10px; padding:12px 14px; background:var(--surface); border:1px dashed var(--brass);
+border-radius:10px; font-size:12.5px; color:var(--muted);
+}
+.pix-box.show{display:block;}
+.pix-box code{
+display:block; margin-top:6px; font-family:'IBM Plex Mono', monospace; font-size:12px;
+background:var(--surface-2); padding:8px 10px; border-radius:8px; color:var(--ink); word-break:break-all;
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+<div class="brand">
+<div class="brand-mark"></div>
+<div>
+<div class="brand-name">Barber House</div>
+<div class="brand-sub" id="brand-sub">Espelho · sistema do salão</div>
+</div>
+</div>
+<nav class="switch">
+<button class="active" data-view="admin">Painel do salão</button>
+<button data-view="client">Marcar horário</button>
+</nav>
+<button class="logout-btn" id="logout-btn" style="display:none;">Sair</button>
+</header>
+
+<main>
+
+<div class="api-banner" id="api-banner">
+Não consegui falar com a API em <code id="api-url-shown"></code>. Confirme se o backend está rodando
+(<code>npm start</code> na pasta <code>backend</code>) e se <code>API_BASE_URL</code>, no topo do script deste
+arquivo, aponta para o endereço certo.
+</div>
+
+<!-- ============ VIEW 1: PAINEL DO SALÃO (ADMIN) ============ -->
+<section class="view active" id="view-admin">
+
+<!-- Tela de login: some assim que o dono entra -->
+<div class="login-wrap" id="login-wrap">
+<div class="brand-mark"></div>
+<h2>Acesso do dono</h2>
+<p>Entre com seu email e senha para ver a agenda, a equipe e os serviços da Barber House.</p>
+<div class="field">
+<label for="login-email">Email</label>
+<input type="email" id="login-email" placeholder="dono@salao.com">
+</div>
+<div class="field">
+<label for="login-senha">Senha</label>
+<input type="password" id="login-senha" placeholder="••••••••">
+</div>
+<button class="confirm-btn" id="login-btn">Entrar</button>
+<div class="feedback" id="login-feedback"></div>
+</div>
+
+<!-- Conteúdo do painel: só aparece depois do login -->
+<div id="admin-content" style="display:none;">
+
+<div class="panel-head">
+<div>
+<span class="eyebrow" id="admin-dia-semana">Hoje</span>
+<h1>Agenda de hoje</h1>
+<div class="today-note" id="admin-data-note">Carregando…</div>
+</div>
+<div class="kpis">
+<div class="kpi"><div class="num" id="kpi-atendimentos">–</div><div class="lbl">Atendimentos hoje</div></div>
+<div class="kpi"><div class="num" id="kpi-faturamento">–</div><div class="lbl">Faturamento previsto (hoje)</div></div>
+<div class="kpi"><div class="num" id="kpi-faturamento-total">–</div><div class="lbl">Faturamento total (histórico)</div></div>
+<div class="kpi"><div class="num" id="kpi-profissionais">–</div><div class="lbl">Profissionais ativos</div></div>
+</div>
+</div>
+
+<!-- Signature element: cada profissional como um "espelho" com a agenda do dia -->
+<div class="mirrors" id="mirrors-container">
+<div class="loading-msg">Carregando agenda…</div>
+</div>
+
+<div class="legend">
+<span><i class="dot sage"></i> Confirmado</span>
+<span><i class="dot brass"></i> Agendado (aguardando confirmação)</span>
+<span><i class="dot muted"></i> Concluído</span>
+</div>
+
+<div class="section-title">Atendimentos por profissional</div>
+<div class="staff-cards" id="staff-cards">
+<div class="loading-msg">Carregando equipe…</div>
+</div>
+
+<div class="section-title">Histórico de atendimentos</div>
+<table>
+<thead><tr><th>Cliente</th><th>Serviço</th><th>Valor</th><th>Profissional</th><th>Data</th><th>Status</th></tr></thead>
+<tbody id="historico-tbody">
+<tr><td colspan="6" class="loading-msg">Carregando histórico…</td></tr>
+</tbody>
+</table>
+
+<div class="section-title">
+Serviços e valores
+<button class="btn btn-wine" id="btn-novo-servico">+ Novo serviço</button>
+</div>
+<table>
+<thead><tr><th>Serviço</th><th>Duração</th><th>Valor</th><th>Profissionais</th><th></th><th></th></tr></thead>
+<tbody id="servicos-tbody">
+<tr><td colspan="6" class="loading-msg">Carregando serviços…</td></tr>
+</tbody>
+</table>
+
+<div class="section-title">
+Equipe
+<button class="btn btn-ghost" id="btn-novo-profissional">+ Novo profissional</button>
+</div>
+<table>
+<thead><tr><th>Nome</th><th>Especialidade</th><th>Atendimentos (histórico)</th><th></th><th></th></tr></thead>
+<tbody id="equipe-tbody">
+<tr><td colspan="5" class="loading-msg">Carregando equipe…</td></tr>
+</tbody>
+</table>
+
+</div>
+</section>
+
+<!-- ============ VIEW 2: AGENDAMENTO (CLIENTE) ============ -->
+<section class="view" id="view-client">
+
+<div class="booking-hero">
+<span class="eyebrow">Novo agendamento</span>
+<h1>Escolha seu horário</h1>
+<p>Selecione o serviço, o profissional e o melhor horário para você. Confirmamos na hora.</p>
+</div>
+
+<div class="steps">
+<span class="step-pill" id="step-1">1 · Serviço</span>
+<span class="step-pill" id="step-2">2 · Profissional</span>
+<span class="step-pill" id="step-3">3 · Horário</span>
+<span class="step-pill" id="step-4">4 · Confirmação</span>
+</div>
+
+<div class="section-title" style="margin-top:0;">Qual serviço você quer?</div>
+<div class="card-grid" id="services-grid">
+<div class="loading-msg">Carregando serviços…</div>
+</div>
+
+<div class="section-title">Com qual profissional?</div>
+<div class="card-grid" id="prof-grid">
+<div class="empty-msg">Escolha um serviço primeiro.</div>
+</div>
+
+<div class="section-title">Quando?</div>
+<div class="date-picker">
+<input type="date" id="date-input">
+</div>
+<div class="time-grid" id="time-grid">
+<div class="empty-msg">Escolha o serviço, o profissional e a data.</div>
+</div>
+
+<div class="summary">
+<h3>Seus dados</h3>
+<div class="field">
+<label for="cliente-nome">Nome</label>
+<input type="text" id="cliente-nome" placeholder="Seu nome completo">
+</div>
+<div class="field">
+<label for="cliente-telefone">Telefone</label>
+<input type="text" id="cliente-telefone" placeholder="(11) 90000-0000">
+</div>
+<div class="field">
+<label>
+<input type="checkbox" id="cliente-lgpd">
+Aceito o uso dos meus dados para realizar o agendamento.
+</label>
+</div>
+
+<div class="payment-note">
+<div class="payment-title">💳 Forma de pagamento</div>
+<div class="payment-options">
+<label><input type="radio" name="pagamento" value="pix" id="pagamento-pix" checked> Pix</label>
+<label><input type="radio" name="pagamento" value="dinheiro" id="pagamento-dinheiro"> Dinheiro</label>
+<label>
+<input type="radio" name="pagamento" value="cartao" id="pagamento-cartao"> Cartão de crédito/débito
+</label>
+</div>
+<div class="obs">Cartão de crédito é aceito apenas de forma presencial, no salão.</div>
+<div class="pix-box show" id="pix-box">
+Chave Pix do salão (copie e cole no app do seu banco):
+<code id="pix-chave">Barber House</code>
+</div>
+</div>
+
+<h3 style="margin-top:22px;">Resumo do agendamento</h3>
+<div class="summary-row"><span>Serviço</span><span class="v" id="sum-service">—</span></div>
+<div class="summary-row"><span>Profissional</span><span class="v" id="sum-prof">—</span></div>
+<div class="summary-row"><span>Data</span><span class="v" id="sum-date">—</span></div>
+<div class="summary-row"><span>Horário</span><span class="v" id="sum-time">—</span></div>
+<div class="summary-total"><span>Total</span><span class="v" id="sum-total">R$ 0,00</span></div>
+<button class="confirm-btn" id="confirm-btn" disabled>Confirmar agendamento</button>
+<div class="feedback" id="confirm-feedback"></div>
+</div>
+
+</section>
+
+<!-- ============ MODAL: NOVO SERVIÇO ============ -->
+<div class="modal-backdrop" id="modal-servico-backdrop">
+<div class="modal-card">
+<button class="modal-close" id="modal-servico-fechar" aria-label="Fechar">×</button>
+<h2>Novo serviço</h2>
+<p class="modal-sub">Cadastre um novo serviço para o salão.</p>
+<div class="field">
+<label for="novo-servico-nome">Nome do serviço</label>
+<input type="text" id="novo-servico-nome" placeholder="Ex.: Hidratação">
+</div>
+<div class="field">
+<label for="novo-servico-duracao">Duração (minutos)</label>
+<input type="number" id="novo-servico-duracao" min="5" step="5" placeholder="40">
+</div>
+<div class="field">
+<label for="novo-servico-valor">Valor (R$)</label>
+<input type="number" id="novo-servico-valor" min="0" step="1" placeholder="40">
+</div>
+<button class="confirm-btn" id="salvar-novo-servico">Salvar serviço</button>
+<div class="feedback" id="novo-servico-feedback"></div>
+</div>
+</div>
+
+<!-- ============ MODAL: NOVO PROFISSIONAL ============ -->
+<div class="modal-backdrop" id="modal-profissional-backdrop">
+<div class="modal-card">
+<button class="modal-close" id="modal-profissional-fechar" aria-label="Fechar">×</button>
+<h2>Novo profissional</h2>
+<p class="modal-sub">Cadastre um novo integrante da equipe.</p>
+<div class="field">
+<label for="novo-prof-nome">Nome</label>
+<input type="text" id="novo-prof-nome" placeholder="Nome completo">
+</div>
+<div class="field">
+<label for="novo-prof-especialidade">Especialidade</label>
+<input type="text" id="novo-prof-especialidade" placeholder="Ex.: Barbeiro, Cabeleireira...">
+</div>
+<div class="field">
+<label>Quais serviços realiza?</label>
+<div class="checkbox-list" id="novo-prof-servicos"></div>
+</div>
+<button class="confirm-btn" id="salvar-novo-profissional">Salvar profissional</button>
+<div class="feedback" id="novo-prof-feedback"></div>
+</div>
+</div>
+
+</main>
+
+<footer>Barber House — conectado à API em <code id="footer-api-url"></code> — sistema de agendamento Espelho</footer>
+
+<script>
+/* =========================================================================
+CONFIGURAÇÃO
+Aponte para onde o backend (Express + MySQL) está rodando.
+Em produção, troque pelo endereço público da sua API
+(ex.: 'https://api.seusalao.com/api').
+========================================================================= */
+const API_BASE_URL = 'http://localhost:3000/api';
+
+document.getElementById('api-url-shown').textContent = API_BASE_URL;
+document.getElementById('footer-api-url').textContent = API_BASE_URL;
+
+/* =========================================================================
+DADOS PADRÃO (FALLBACK)
+Usados só na tela de agendamento do cliente quando a API está fora do ar,
+para que a página não fique vazia. Assim que o backend responder, ele é
+sempre a fonte de verdade.
+========================================================================= */
+const FALLBACK_SERVICOS = [
+{ id: 1, nome: 'Corte de cabelo', duracao_min: 40, valor: 40 },
+{ id: 2, nome: 'Barba', duracao_min: 25, valor: 25 },
+{ id: 3, nome: 'Sobrancelha', duracao_min: 15, valor: 15 },
+];
+const FALLBACK_HORARIOS = ['09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
+
+const DIAS_SEMANA = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+const hojeISO = () => new Date().toISOString().slice(0, 10);
+const formatarData = (iso) => {
+const [ano, mes, dia] = iso.split('-');
+return `${dia}/${mes}/${ano}`;
+};
+const formatarMoeda = (valor) => 'R$ ' + Number(valor).toFixed(2).replace('.', ',');
+
+/* =========================================================================
+LOGIN
+========================================================================= */
+function estaLogado() {
+return !!localStorage.getItem('espelho_token');
+}
+
+/* =========================================================================
+HELPER genérico de chamada à API real (Express + MySQL).
+Envia o token do dono (se houver) e trata erros de forma consistente.
+========================================================================= */
+async function api(path, options = {}) {
+const banner = document.getElementById('api-banner');
+const headers = { 'Content-Type': 'application/json' };
+if (estaLogado()) headers.Authorization = 'Bearer ' + localStorage.getItem('espelho_token');
+
+let resp;
+try {
+resp = await fetch(API_BASE_URL + path, {
+method: options.method || 'GET',
+headers,
+body: options.body,
+});
+} catch (err) {
+// falha de rede: backend fora do ar ou endereço errado
+banner.classList.add('show');
+throw new Error('Não foi possível falar com o servidor. Verifique se o backend está rodando.');
+}
+
+banner.classList.remove('show');
+let data = null;
+try { data = await resp.json(); } catch (e) { /* resposta sem corpo */ }
+
+if (!resp.ok) {
+throw new Error((data && data.erro) || 'Ocorreu um erro na requisição.');
+}
+return data;
+}
+
+/* =========================================================================
+ALTERNÂNCIA ENTRE PAINEL E AGENDAMENTO
+========================================================================= */
+const navButtons = document.querySelectorAll('nav.switch button');
+const views = { admin: document.getElementById('view-admin'), client: document.getElementById('view-client') };
+navButtons.forEach(btn => {
+btn.addEventListener('click', () => {
+navButtons.forEach(b => b.classList.remove('active'));
+btn.classList.add('active');
+Object.values(views).forEach(v => v.classList.remove('active'));
+views[btn.dataset.view].classList.add('active');
+// ao voltar pro painel do dono já logado, atualiza a agenda na hora —
+// assim qualquer agendamento feito pelo cliente aparece automaticamente
+if (btn.dataset.view === 'admin' && estaLogado()) carregarPainel();
+// na página do cliente, mostra só o nome do salão (sem "Espelho · sistema do salão")
+document.getElementById('brand-sub').style.display = btn.dataset.view === 'client' ? 'none' : '';
+});
+});
+
+/* =========================================================================
+LOGIN DO DONO
+========================================================================= */
+function mostrarPainelOuLogin() {
+const logado = estaLogado();
+document.getElementById('login-wrap').style.display = logado ? 'none' : 'block';
+document.getElementById('admin-content').style.display = logado ? 'block' : 'none';
+document.getElementById('logout-btn').style.display = logado ? 'inline-block' : 'none';
+if (logado) carregarPainel();
+}
+
+function fazerLogout() {
+localStorage.removeItem('espelho_token');
+localStorage.removeItem('espelho_usuario');
+mostrarPainelOuLogin();
+}
+
+document.getElementById('logout-btn').addEventListener('click', fazerLogout);
+
+document.getElementById('login-btn').addEventListener('click', async () => {
+const email = document.getElementById('login-email').value.trim();
+const senha = document.getElementById('login-senha').value;
+const feedback = document.getElementById('login-feedback');
+feedback.textContent = ''; feedback.className = 'feedback';
+
+if (!email || !senha) {
+feedback.textContent = 'Preencha email e senha.';
+feedback.classList.add('erro');
+return;
+}
+
+const btn = document.getElementById('login-btn');
+btn.disabled = true; btn.textContent = 'Entrando…';
+
+try {
+const resultado = await api('/auth/login', {
+method: 'POST',
+body: JSON.stringify({ email, senha }),
+});
+localStorage.setItem('espelho_token', resultado.token);
+localStorage.setItem('espelho_usuario', JSON.stringify(resultado.usuario));
+mostrarPainelOuLogin();
+} catch (err) {
+feedback.textContent = err.message;
+feedback.classList.add('erro');
+} finally {
+btn.disabled = false; btn.textContent = 'Entrar';
+}
+});
+
+// permite logar apertando Enter em qualquer um dos dois campos
+['login-email', 'login-senha'].forEach(id => {
+document.getElementById(id).addEventListener('keydown', (e) => {
+if (e.key === 'Enter') document.getElementById('login-btn').click();
+});
+});
+
+/* =========================================================================
+PAINEL DO SALÃO (ADMIN)
+========================================================================= */
+async function carregarPainel() {
+const hoje = hojeISO();
+const diaSemana = DIAS_SEMANA[new Date(hoje + 'T00:00:00').getDay()];
+document.getElementById('admin-dia-semana').textContent = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
+document.getElementById('admin-data-note').textContent = formatarData(hoje);
+
+let profissionais = [];
+try {
+profissionais = await api('/profissionais');
+} catch (err) {
+document.getElementById('mirrors-container').innerHTML = `<div class="empty-msg">Não foi possível carregar a equipe.</div>`;
+return;
+}
+
+document.getElementById('kpi-profissionais').textContent = profissionais.length;
+
+// busca a agenda de hoje de cada profissional em paralelo
+const agendasPorProfissional = await Promise.all(
+profissionais.map(p => api(`/agendamentos?profissional_id=${p.id}&data=${hoje}`).catch(() => []))
+);
+
+let totalAtendimentos = 0;
+let faturamentoPrevisto = 0;
+
+const mirrorsHtml = profissionais.map((prof, i) => {
+const agenda = agendasPorProfissional[i]
+.filter(a => a.status !== 'cancelado')
+.sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio));
+
+totalAtendimentos += agenda.length;
+faturamentoPrevisto += agenda.reduce((soma, a) => soma + Number(a.valor_cobrado || 0), 0);
+
+const inicial = prof.nome.trim().charAt(0).toUpperCase();
+const slotsHtml = agenda.length
+? agenda.map(a => `
+<div class="slot ${a.status}">
+<span class="time">${a.hora_inicio.slice(0,5)}</span>
+<div class="info"><b>${a.cliente_nome}</b><span>${a.servico_nome} · ${formatarMoeda(a.valor_cobrado)}</span></div>
+</div>`).join('')
+: `<div class="slot empty">Sem atendimentos hoje</div>`;
+
+return `
+<div class="mirror">
+<div class="mirror-frame">
+<div class="avatar">${inicial}</div>
+<div>
+<div class="prof-name">${prof.nome}</div>
+<div class="prof-role">${prof.especialidade || ''}</div>
+</div>
+</div>
+<div class="timeline">${slotsHtml}</div>
+</div>`;
+}).join('');
+
+document.getElementById('mirrors-container').innerHTML = mirrorsHtml || `<div class="empty-msg">Nenhum profissional cadastrado ainda.</div>`;
+document.getElementById('kpi-atendimentos').textContent = totalAtendimentos;
+document.getElementById('kpi-faturamento').textContent = formatarMoeda(faturamentoPrevisto);
+
+// faturamento total considerando TODO o histórico de agendamentos (não só hoje)
+let todosAgendamentos = [];
+try {
+todosAgendamentos = (await api('/agendamentos')).filter(a => a.status !== 'cancelado');
+} catch (err) { /* mantém como vazio se a chamada falhar */ }
+const faturamentoTotal = todosAgendamentos.reduce((soma, a) => soma + Number(a.valor_cobrado || 0), 0);
+document.getElementById('kpi-faturamento-total').textContent = formatarMoeda(faturamentoTotal);
+
+carregarTabelaServicos(profissionais);
+carregarTabelaEquipe(profissionais);
+carregarHistoricoAtendimentos(todosAgendamentos);
+}
+
+async function carregarTabelaServicos(profissionais) {
+let servicos = [];
+try {
+servicos = await api('/servicos');
+} catch (err) {
+document.getElementById('servicos-tbody').innerHTML = `<tr><td colspan="6" class="empty-msg">Não foi possível carregar os serviços.</td></tr>`;
+return;
+}
+
+// para cada profissional, busca os serviços que ele realiza (usado para montar a coluna "Profissionais")
+const servicosPorProfissional = await Promise.all(
+profissionais.map(p => api(`/profissionais/${p.id}/servicos`).catch(() => []))
+);
+
+const linhas = servicos.map(s => {
+const nomesProf = profissionais
+.filter((p, i) => servicosPorProfissional[i].some(sv => sv.id === s.id))
+.map(p => p.nome.split(' ')[0])
+.join(', ') || '—';
+
+return `
+<tr>
+<td>${s.nome}</td>
+<td>${s.duracao_min} min</td>
+<td class="price">${formatarMoeda(s.valor)}</td>
+<td>${nomesProf}</td>
+<td><span class="tag on">${s.ativo ? 'Ativo' : 'Inativo'}</span></td>
+<td><button class="btn-excluir" data-tipo="servico" data-id="${s.id}" data-nome="${s.nome.replace(/"/g,'&quot;')}">Excluir</button></td>
+</tr>`;
+}).join('');
+
+document.getElementById('servicos-tbody').innerHTML = linhas || `<tr><td colspan="6" class="empty-msg">Nenhum serviço cadastrado.</td></tr>`;
+ativarBotoesExcluir();
+}
+
+async function carregarTabelaEquipe(profissionais) {
+const historicos = await Promise.all(
+profissionais.map(p => api(`/agendamentos?profissional_id=${p.id}`).catch(() => []))
+);
+const totais = historicos.map(h => h.filter(a => a.status !== 'cancelado').length);
+
+// tabela detalhada
+const linhas = profissionais.map((p, i) => `
+<tr>
+<td>${p.nome}</td>
+<td>${p.especialidade || '—'}</td>
+<td>${totais[i]}</td>
+<td><span class="tag on">${p.ativo ? 'Ativo' : 'Inativo'}</span></td>
+<td><button class="btn-excluir" data-tipo="profissional" data-id="${p.id}" data-nome="${p.nome.replace(/"/g,'&quot;')}">Excluir</button></td>
+</tr>`).join('');
+document.getElementById('equipe-tbody').innerHTML = linhas || `<tr><td colspan="5" class="empty-msg">Nenhum profissional cadastrado.</td></tr>`;
+
+// cards de destaque com o total de atendimentos de cada funcionário
+const cardsHtml = profissionais.map((p, i) => `
+<div class="staff-card">
+<div class="avatar">${p.nome.trim().charAt(0).toUpperCase()}</div>
+<div class="staff-info">
+<h4>${p.nome}</h4>
+<div class="role">${p.especialidade || ''}</div>
+</div>
+<div>
+<div class="count">${totais[i]}</div>
+<div class="count-lbl">atendimentos</div>
+</div>
+</div>`).join('');
+document.getElementById('staff-cards').innerHTML = cardsHtml || `<div class="empty-msg">Nenhum profissional cadastrado.</div>`;
+
+ativarBotoesExcluir();
+}
+
+/* Delegação de clique para os botões "Excluir" das tabelas de serviços e equipe.
+As tabelas são recriadas via innerHTML toda vez que os dados mudam, então
+os listeners são reanexados aqui sempre que uma tabela é redesenhada. */
+function ativarBotoesExcluir() {
+document.querySelectorAll('.btn-excluir').forEach(btn => {
+btn.onclick = async () => {
+const tipo = btn.dataset.tipo;
+const id = Number(btn.dataset.id);
+const nome = btn.dataset.nome;
+
+if (tipo === 'servico') {
+if (!confirm(`Excluir o serviço "${nome}"? Essa ação não pode ser desfeita.`)) return;
+try {
+await api(`/servicos/${id}`, { method: 'DELETE' });
+carregarPainel();
+carregarServicos(); // atualiza também a tela de agendamento do cliente
+} catch (err) {
+alert('Não foi possível excluir o serviço: ' + err.message);
+}
+} else if (tipo === 'profissional') {
+if (!confirm(`Excluir o profissional "${nome}"? Essa ação não pode ser desfeita.`)) return;
+try {
+await api(`/profissionais/${id}`, { method: 'DELETE' });
+carregarPainel();
+} catch (err) {
+alert('Não foi possível excluir o profissional: ' + err.message);
+}
+}
+};
+});
+}
+
+function carregarHistoricoAtendimentos(agendamentos) {
+const tbody = document.getElementById('historico-tbody');
+
+const STATUS_LABEL = { confirmado: 'Confirmado', agendado: 'Agendado', concluido: 'Concluído', cancelado: 'Cancelado' };
+
+const linhas = agendamentos.map(a => `
+<tr>
+<td>${a.cliente_nome || 'Cliente'}</td>
+<td>${a.servico_nome || 'Serviço'}</td>
+<td class="price">${formatarMoeda(a.valor_cobrado)}</td>
+<td>${a.profissional_nome || '—'}</td>
+<td>${formatarData(a.data)}</td>
+<td><span class="tag ${a.status}">${STATUS_LABEL[a.status] || a.status}</span></td>
+</tr>`).join('');
+
+tbody.innerHTML = linhas || `<tr><td colspan="6" class="empty-msg">Nenhum atendimento registrado ainda.</td></tr>`;
+}
+
+/* =========================================================================
+AGENDAMENTO (CLIENTE)
+========================================================================= */
+const estado = { servico: null, profissional: null, data: null, hora: null };
+
+document.getElementById('date-input').value = hojeISO();
+document.getElementById('date-input').min = hojeISO();
+estado.data = hojeISO();
+
+async function carregarServicos() {
+let servicos = [];
+try {
+servicos = await api('/servicos');
+} catch (err) {
+servicos = FALLBACK_SERVICOS;
+}
+
+const ICONES = { corte: '✂️', combo: '💈', escova: '💨', manicure: '💅', barba: '🪒', unha: '💅', sobrancelha: '👁️', tintura: '🎨', luzes: '✨', nevou: '❄️' };
+const iconePara = (nome) => {
+const chave = Object.keys(ICONES).find(k => nome.toLowerCase().includes(k));
+return ICONES[chave] || '💈';
+};
+
+document.getElementById('services-grid').innerHTML = servicos.map(s => `
+<div class="pick-card" data-id="${s.id}" data-nome="${s.nome}" data-valor="${s.valor}" data-duracao="${s.duracao_min}">
+<div class="icon">${iconePara(s.nome)}</div>
+<h3>${s.nome}</h3>
+<div class="meta">${s.duracao_min} min</div>
+<div class="value">${formatarMoeda(s.valor)}</div>
+</div>`).join('');
+
+document.querySelectorAll('#services-grid .pick-card').forEach(card => {
+card.addEventListener('click', () => selecionarServico(card));
+});
+}
+
+function selecionarServico(card) {
+document.querySelectorAll('#services-grid .pick-card').forEach(c => c.classList.remove('selected'));
+card.classList.add('selected');
+estado.servico = {
+id: Number(card.dataset.id), nome: card.dataset.nome,
+valor: Number(card.dataset.valor), duracao: Number(card.dataset.duracao),
+};
+document.getElementById('sum-service').textContent = estado.servico.nome;
+document.getElementById('sum-total').textContent = formatarMoeda(estado.servico.valor);
+document.getElementById('step-1').classList.add('done');
+
+// reseta escolhas seguintes, já que mudar o serviço muda quem atende e quais horários cabem
+estado.profissional = null; estado.hora = null;
+document.getElementById('sum-prof').textContent = '—';
+document.getElementById('sum-time').textContent = '—';
+document.getElementById('step-2').classList.remove('done');
+document.getElementById('step-3').classList.remove('done');
+atualizarBotaoConfirmar();
+
+carregarProfissionaisDoServico(estado.servico.id);
+}
+
+async function carregarProfissionaisDoServico(servicoId) {
+const grid = document.getElementById('prof-grid');
+grid.innerHTML = `<div class="loading-msg">Buscando profissionais…</div>`;
+
+let habilitados = [];
+try {
+const todosProfissionais = await api('/profissionais');
+// filtra apenas quem realiza esse serviço, checando o vínculo de cada um
+const servicosPorProfissional = await Promise.all(
+todosProfissionais.map(p => api(`/profissionais/${p.id}/servicos`))
+);
+habilitados = todosProfissionais.filter((p, i) => servicosPorProfissional[i].some(s => s.id === servicoId));
+} catch (err) {
+grid.innerHTML = `<div class="empty-msg">Não foi possível carregar os profissionais agora.</div>`;
+return;
+}
+
+if (habilitados.length === 0) {
+grid.innerHTML = `<div class="empty-msg">Nenhum profissional realiza esse serviço no momento.</div>`;
+return;
+}
+
+grid.innerHTML = habilitados.map(p => `
+<div class="prof-card" data-id="${p.id}" data-nome="${p.nome}">
+<div class="avatar">${p.nome.trim().charAt(0).toUpperCase()}</div>
+<h3>${p.nome}</h3>
+<div class="meta">${p.especialidade || ''}</div>
+</div>`).join('');
+
+document.querySelectorAll('#prof-grid .prof-card').forEach(card => {
+card.addEventListener('click', () => selecionarProfissional(card));
+});
+}
+
+function selecionarProfissional(card) {
+document.querySelectorAll('#prof-grid .prof-card').forEach(c => c.classList.remove('selected'));
+card.classList.add('selected');
+estado.profissional = { id: Number(card.dataset.id), nome: card.dataset.nome };
+document.getElementById('sum-prof').textContent = estado.profissional.nome;
+document.getElementById('step-2').classList.add('done');
+
+estado.hora = null;
+document.getElementById('sum-time').textContent = '—';
+document.getElementById('step-3').classList.remove('done');
+atualizarBotaoConfirmar();
+
+carregarHorariosLivres();
+}
+
+document.getElementById('date-input').addEventListener('change', (e) => {
+estado.data = e.target.value;
+document.getElementById('sum-date').textContent = formatarData(estado.data);
+estado.hora = null;
+document.getElementById('sum-time').textContent = '—';
+document.getElementById('step-3').classList.remove('done');
+atualizarBotaoConfirmar();
+carregarHorariosLivres();
+});
+document.getElementById('sum-date').textContent = formatarData(estado.data);
+
+async function carregarHorariosLivres() {
+const grid = document.getElementById('time-grid');
+if (!estado.servico || !estado.profissional) {
+grid.innerHTML = `<div class="empty-msg">Escolha o serviço e o profissional primeiro.</div>`;
+return;
+}
+grid.innerHTML = `<div class="loading-msg">Buscando horários livres…</div>`;
+
+let horarios = [];
+try {
+horarios = await api(`/agendamentos/horarios-livres?profissional_id=${estado.profissional.id}&servico_id=${estado.servico.id}&data=${estado.data}`);
+} catch (err) {
+// API fora do ar — mostra uma grade de horários padrão para não travar o fluxo
+horarios = FALLBACK_HORARIOS;
+}
+
+if (horarios.length === 0) {
+grid.innerHTML = `<div class="empty-msg">${estado.profissional.nome} não tem horários livres nesse dia. Tente outra data.</div>`;
+return;
+}
+
+grid.innerHTML = horarios.map(h => `<div class="time-slot" data-hora="${h}">${h}</div>`).join('');
+document.querySelectorAll('#time-grid .time-slot').forEach(slot => {
+slot.addEventListener('click', () => {
+document.querySelectorAll('#time-grid .time-slot').forEach(s => s.classList.remove('selected'));
+slot.classList.add('selected');
+estado.hora = slot.dataset.hora;
+document.getElementById('sum-time').textContent = estado.hora;
+document.getElementById('step-3').classList.add('done');
+atualizarBotaoConfirmar();
+});
+});
+}
+
+function atualizarBotaoConfirmar() {
+const pronto = estado.servico && estado.profissional && estado.data && estado.hora;
+document.getElementById('confirm-btn').disabled = !pronto;
+}
+
+document.getElementById('confirm-btn').addEventListener('click', async function () {
+const nome = document.getElementById('cliente-nome').value.trim();
+const telefone = document.getElementById('cliente-telefone').value.trim();
+const lgpd = document.getElementById('cliente-lgpd').checked;
+const feedback = document.getElementById('confirm-feedback');
+feedback.textContent = ''; feedback.className = 'feedback';
+
+if (!nome || !telefone) {
+feedback.textContent = 'Preencha seu nome e telefone para confirmar.';
+feedback.classList.add('erro');
+return;
+}
+if (!lgpd) {
+
+feedback.textContent = 'É necessário aceitar o uso dos dados para continuar.';
+
+feedback.classList.add('erro');
+
+return;
+
+}
+this.disabled = true;
+this.textContent = 'Confirmando…';
+
+try {
+// cria (ou reaproveita, se o telefone já existir) o cadastro do cliente
+const cliente = await api('/clientes', {
+method: 'POST',
+body: JSON.stringify({ nome, telefone, lgpd }),
+});
+
+const pagamentoEl = document.querySelector('input[name="pagamento"]:checked');
+const formaPagamento = pagamentoEl ? pagamentoEl.value : 'pix';
+
+await api('/agendamentos', {
+method: 'POST',
+body: JSON.stringify({
+cliente_id: cliente.id,
+profissional_id: estado.profissional.id,
+servico_id: estado.servico.id,
+data: estado.data,
+hora_inicio: estado.hora,
+forma_pagamento: formaPagamento,
+}),
+});
+
+const labelPagamento = { pix: 'Pix', dinheiro: 'dinheiro', cartao: 'cartão (presencial)' }[formaPagamento];
+this.textContent = '✓ Agendamento confirmado!';
+feedback.textContent = `Tudo certo, ${nome.split(' ')[0]}! Te esperamos dia ${formatarData(estado.data)} às ${estado.hora}. Pagamento: ${labelPagamento}.`;
+feedback.classList.add('ok');
+document.getElementById('step-4').classList.add('done');
+
+// atualiza o painel do dono na hora, pra o agendamento aparecer no espelho automaticamente
+if (estaLogado()) carregarPainel();
+} catch (err) {
+this.disabled = false;
+this.textContent = 'Confirmar agendamento';
+feedback.textContent = err.message;
+feedback.classList.add('erro');
+// o horário pode ter sido ocupado por outra pessoa nesse meio tempo — atualiza a lista
+carregarHorariosLivres();
+}
+});
+
+/* =========================================================================
+PAGAMENTO — mostra a chave Pix só quando "Pix" está selecionado
+========================================================================= */
+document.querySelectorAll('input[name="pagamento"]').forEach(radio => {
+radio.addEventListener('change', () => {
+document.getElementById('pix-box').classList.toggle('show', radio.value === 'pix' && radio.checked);
+});
+});
+
+/* =========================================================================
+MODAL: NOVO SERVIÇO
+========================================================================= */
+const modalServico = document.getElementById('modal-servico-backdrop');
+
+function abrirModalServico() {
+document.getElementById('novo-servico-nome').value = '';
+document.getElementById('novo-servico-duracao').value = '';
+document.getElementById('novo-servico-valor').value = '';
+const feedback = document.getElementById('novo-servico-feedback');
+feedback.textContent = ''; feedback.className = 'feedback';
+modalServico.classList.add('show');
+}
+function fecharModalServico() { modalServico.classList.remove('show'); }
+
+document.getElementById('btn-novo-servico').addEventListener('click', abrirModalServico);
+document.getElementById('modal-servico-fechar').addEventListener('click', fecharModalServico);
+modalServico.addEventListener('click', (e) => { if (e.target === modalServico) fecharModalServico(); });
+
+document.getElementById('salvar-novo-servico').addEventListener('click', async function () {
+const nome = document.getElementById('novo-servico-nome').value.trim();
+const duracao = Number(document.getElementById('novo-servico-duracao').value);
+const valor = Number(document.getElementById('novo-servico-valor').value);
+const feedback = document.getElementById('novo-servico-feedback');
+feedback.textContent = ''; feedback.className = 'feedback';
+
+if (!nome || !duracao || duracao <= 0 || isNaN(valor) || valor < 0) {
+feedback.textContent = 'Preencha nome, duração e valor corretamente.';
+feedback.classList.add('erro');
+return;
+}
+
+this.disabled = true;
+try {
+await api('/servicos', {
+method: 'POST',
+body: JSON.stringify({ nome, duracao_min: duracao, valor }),
+});
+
+feedback.textContent = `Serviço "${nome}" cadastrado!`;
+feedback.classList.add('ok');
+
+// atualiza tudo que depende da lista de serviços
+carregarPainel();
+carregarServicos();
+
+setTimeout(fecharModalServico, 900);
+} catch (err) {
+feedback.textContent = err.message;
+feedback.classList.add('erro');
+} finally {
+this.disabled = false;
+}
+});
+
+/* =========================================================================
+MODAL: NOVO PROFISSIONAL
+========================================================================= */
+const modalProfissional = document.getElementById('modal-profissional-backdrop');
+
+async function abrirModalProfissional() {
+document.getElementById('novo-prof-nome').value = '';
+document.getElementById('novo-prof-especialidade').value = '';
+const feedback = document.getElementById('novo-prof-feedback');
+feedback.textContent = ''; feedback.className = 'feedback';
+
+const servicos = await api('/servicos').catch(() => []);
+const listaEl = document.getElementById('novo-prof-servicos');
+listaEl.innerHTML = servicos.map(s => `
+<label>
+<input type="checkbox" value="${s.id}" class="novo-prof-servico-check">
+${s.nome}
+</label>`).join('') || '<span style="font-size:12.5px;color:var(--muted);">Nenhum serviço cadastrado ainda.</span>';
+
+modalProfissional.classList.add('show');
+}
+function fecharModalProfissional() { modalProfissional.classList.remove('show'); }
+
+document.getElementById('btn-novo-profissional').addEventListener('click', abrirModalProfissional);
+document.getElementById('modal-profissional-fechar').addEventListener('click', fecharModalProfissional);
+modalProfissional.addEventListener('click', (e) => { if (e.target === modalProfissional) fecharModalProfissional(); });
+
+document.getElementById('salvar-novo-profissional').addEventListener('click', async function () {
+const nome = document.getElementById('novo-prof-nome').value.trim();
+const especialidade = document.getElementById('novo-prof-especialidade').value.trim();
+const servicosSelecionados = Array.from(document.querySelectorAll('.novo-prof-servico-check:checked')).map(c => Number(c.value));
+const feedback = document.getElementById('novo-prof-feedback');
+feedback.textContent = ''; feedback.className = 'feedback';
+
+if (!nome || !especialidade) {
+feedback.textContent = 'Preencha o nome e a especialidade.';
+feedback.classList.add('erro');
+return;
+}
+if (servicosSelecionados.length === 0) {
+feedback.textContent = 'Selecione ao menos um serviço.';
+feedback.classList.add('erro');
+return;
+}
+
+this.disabled = true;
+try {
+await api('/profissionais', {
+method: 'POST',
+body: JSON.stringify({ nome, especialidade, servicos: servicosSelecionados }),
+});
+
+feedback.textContent = `Profissional "${nome}" cadastrado!`;
+feedback.classList.add('ok');
+
+carregarPainel();
+
+setTimeout(fecharModalProfissional, 900);
+} catch (err) {
+feedback.textContent = err.message;
+feedback.classList.add('erro');
+} finally {
+this.disabled = false;
+}
+});
+
+/* =========================================================================
+INICIALIZAÇÃO
+========================================================================= */
+mostrarPainelOuLogin(); // mostra o painel se já houver login salvo, senão pede login
+carregarServicos(); // tela pública do cliente carrega direto, sem precisar de login
+</script>
+</body>
+</html>
