@@ -58,8 +58,8 @@ O `index.html` já está configurado para chamar a API em `http://localhost:3000
 ## Login do dono
 
 ```
-email: dono@salao.com
-senha: 12345678
+email: 
+senha: 
 ```
 
 ## Observação de segurança
